@@ -1,27 +1,33 @@
-from collections import defaultdict
 import re
 from multiprocessing import Pool, cpu_count
 
-# Map function: reads file and emits (word, 1) pairs
-def map_function(file_path):
+# Map function: reads a chunk of text and emits (word, 1) pairs
+def map_function(chunk):
     results = []
-    # Open the file for reading
-    with open(file_path, 'r') as file:
-        # Read each line in the file
-        for line in file:
-            # Find all words in the line, convert to lowercase
-            words = re.findall(r'\w+', line.lower())
-            # Emit (word, 1) pairs for each word
-            for word in words:
-                results.append((word, 1))
+    # Find all words in the chunk, convert to lowercase
+    words = re.findall(r'\w+', chunk.lower())
+    # Emit (word, 1) pairs for each word
+    for word in words:
+        results.append((word, 1))
     return results
+
+# Function to split the file into chunks
+def split_file(file_path, chunk_size=1024):
+    with open(file_path, 'r') as file:
+        while True:
+            chunk = file.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
 
 # Parallel map function: uses multiprocessing to parallelize the map phase
 def parallel_map(file_path):
+    # Split the file into chunks
+    chunks = list(split_file(file_path))
     # Create a pool of worker processes
     with Pool(cpu_count()) as pool:
-        # Map the map_function to the file_path using the pool
-        mapped_data = pool.map(map_function, [file_path])
+        # Map the map_function to each chunk using the pool
+        mapped_data = pool.map(map_function, chunks)
     # Flatten the list of lists into a single list of (word, 1) pairs
     flattened_data = [item for sublist in mapped_data for item in sublist]
     return flattened_data
