@@ -13,18 +13,22 @@ def map_function(chunk):
 
 # Function to split the file into chunks
 def split_file(file_path, chunk_size=1024):
+    # Open the file for reading
     with open(file_path, 'r') as file:
         while True:
+            # Read a chunk of the specified size from the file
             chunk = file.read(chunk_size)
+            # If the chunk is empty, break the loop (end of file)
             if not chunk:
                 break
+            # Yield the chunk to the caller
             yield chunk
 
 # Parallel map function: uses multiprocessing to parallelize the map phase
 def parallel_map(file_path):
     # Split the file into chunks
     chunks = list(split_file(file_path))
-    # Create a pool of worker processes
+    # Create a pool of worker processes equal to the number of CPU cores
     with Pool(cpu_count()) as pool:
         # Map the map_function to each chunk using the pool
         mapped_data = pool.map(map_function, chunks)
