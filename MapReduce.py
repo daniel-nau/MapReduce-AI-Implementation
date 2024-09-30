@@ -1,34 +1,36 @@
-def map_function(text):
-    """Map function that processes the text and returns a list of words."""
-    # Split the text into words and return the list
-    return text.split()
+from collections import defaultdict
+import re
 
-def reduce_function(word_list):
-    """Reduce function that counts the total number of words."""
-    # Count the total number of words in the list
-    return len(word_list)
-
-def read_file(file_path):
-    """Read the entire content of the file."""
+def map_function(file_path):
     with open(file_path, 'r') as file:
-        return file.read()
+        for line in file:
+            words = re.findall(r'\w+', line.lower())
+            for word in words:
+                yield (word, 1)
+
+def shuffle_and_sort(mapped_data):
+    shuffled_data = defaultdict(list)
+    for key, value in mapped_data:
+        shuffled_data[key].append(value)
+    return shuffled_data
+
+def reduce_function(shuffled_data):
+    reduced_data = {}
+    for key, values in shuffled_data.items():
+        reduced_data[key] = sum(values)
+    return reduced_data
 
 def word_count(file_path):
-    """Main function to perform word count using a MapReduce approach."""
-    # Step 1: Read the entire file content
-    text = read_file(file_path)
+    mapped_data = map_function(file_path)
+    shuffled_data = shuffle_and_sort(mapped_data)
+    reduced_data = reduce_function(shuffled_data)
+    return reduced_data
 
-    # Step 2: Map phase
-    words = map_function(text)
+file_path = 'alice.txt'  # Path to your file
+word_counts = word_count(file_path)
 
-    # Step 3: Reduce phase
-    total_count = reduce_function(words)
+# Calculate the total number of words
+total_words = sum(word_counts.values())
 
-    return total_count
-
-if __name__ == "__main__":
-    file_path = 'alice.txt'  # Path to your file
-    total_words = word_count(file_path)
-
-    # Print the total word count
-    print(f"Total number of words: {total_words}")
+# Print the total word count
+print(f"Total number of words: {total_words}")
